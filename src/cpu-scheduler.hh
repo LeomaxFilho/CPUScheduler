@@ -9,4 +9,5 @@ private:
 public:
     void addProcess(int arrive, int burst);
     void showResults(const string algoritmo, const vector<Process> procs);
+    void FCFS ();
 };
