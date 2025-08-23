@@ -33,16 +33,19 @@ void CPUScheduler::showResults(const string algorithm, const vector<Process> pro
 void CPUScheduler::FCFS (){
 
     int count = process.size();
+    int timeNow =  process.at(0).arrivalTime;
 
-    process.at(0).waitTime = 0;
-    process.at(0).responseTime = 0;
-    process.at(0).returnTime = process.at(0).timeToLeave;
-
-    for (int i = 1; i < count; i++)
+    for (int i = 0; i < count; i++)
     {
-        process.at(i).waitTime = process.at(i - 1).returnTime;
-        process.at(i).responseTime = process.at(i - 1).returnTime;
-        process.at(i).waitTime = process.at(i - 1).returnTime + process.at(i).timeToLeave;
+        process.at(i).responseTime = timeNow - process.at(i).arrivalTime;
+        process.at(i).waitTime = timeNow - process.at(i).arrivalTime;
+        process.at(i).returnTime = timeNow + process.at(i).timeToLeave - process.at(i).arrivalTime;
+
+        timeNow += process.at(i).timeToLeave;
+
+        if (i + 1 < count)
+            if (timeNow < process.at(i + 1).arrivalTime)
+                timeNow = process.at(i + 1).arrivalTime;
     }
     
     showResults("FCFS: ", process);
@@ -78,7 +81,7 @@ void CPUScheduler::SJF(){
         if (shortestJobIndex != -1){
             
             // Calcula o tempo de resposta do processo
-            procs[shortestJobIndex].responseTime = currentTime - procs[shortestJobIndex].   arrivalTime;
+            procs[shortestJobIndex].responseTime = currentTime - procs[shortestJobIndex].arrivalTime;
 
             // Adiciona ao tempo atual da CPU o tempo de execucao do processo
             currentTime += procs[shortestJobIndex].timeToLeave;
