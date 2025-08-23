@@ -48,24 +48,6 @@ void CPUScheduler::FCFS (){
     showResults("FCFS", process);
 }
 
-void CPUScheduler::FCFS (){
-
-    int count = process.size();
-
-    process.at(0).waitTime = 0;
-    process.at(0).responseTime = 0;
-    process.at(0).returnTime = process.at(0).timeToLeave;
-
-    for (int i = 1; i < count; i++)
-    {
-        process.at(i).waitTime = process.at(i - 1).returnTime;
-        process.at(i).responseTime = process.at(i - 1).returnTime;
-        process.at(i).waitTime = process.at(i - 1).returnTime + process.at(i).timeToLeave;
-    }
-    
-    showResults("FCFS", process);
-}
-
 void CPUScheduler::SJF(){
    
     // Copia do vetor de processos para nao realizar nenhuma operacao com ele
