@@ -3,7 +3,7 @@
 
 int main(int argc, char const *argv[])
 {
-    ifstream readFile("inputs/procs_1.txt");
+    ifstream readFile("inputs/procs_3.txt");
     CPUScheduler scheduler;
     int arrivalTime, burst;
 
@@ -19,6 +19,7 @@ int main(int argc, char const *argv[])
 
     scheduler.FCFS();
     scheduler.SJF();
+    scheduler.RR();
 
     readFile.close(); 
     return 0;

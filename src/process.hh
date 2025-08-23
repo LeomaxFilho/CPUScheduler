@@ -13,7 +13,7 @@ struct Process
     int id;
     int arrivalTime;
     int timeToLeave;
-    int waitTime;
+    int waitTime = 0;
     int returnTime;
     int responseTime;
 
