@@ -1,4 +1,5 @@
 #include "cpu-scheduler.hh"
+
 bool CPUScheduler::sortByArriveTime(Process& a, Process& b){
     return a.arrivalTime < b.arrivalTime;
 }
