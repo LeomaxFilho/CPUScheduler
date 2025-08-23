@@ -17,6 +17,7 @@ int main(int argc, char const *argv[])
         scheduler.addProcess(arrivalTime, burst);        
     }   
 
+    scheduler.FCFS();
     scheduler.SJF();
 
     readFile.close(); 

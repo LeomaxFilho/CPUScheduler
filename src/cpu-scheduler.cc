@@ -1,6 +1,6 @@
 #include "cpu-scheduler.hh"
 
-bool CPUScheduler::sortByArriveTime(Process& a, Process& b){
+bool sortByArriveTime(Process& a, Process& b){
     return a.arrivalTime < b.arrivalTime;
 }
 
@@ -45,7 +45,7 @@ void CPUScheduler::FCFS (){
         process.at(i).waitTime = process.at(i - 1).returnTime + process.at(i).timeToLeave;
     }
     
-    showResults("FCFS", process);
+    showResults("FCFS: ", process);
 }
 
 void CPUScheduler::SJF(){
