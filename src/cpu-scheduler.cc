@@ -9,10 +9,12 @@ string dotToComma(double number)
 {   
     number = round(number*10)/10;
     string strNumber = to_string(number);
-    
+
     for(int i=0; i< strNumber.length(); i++)
-        if(strNumber[i] == '.')
+        if(strNumber[i] == '.'){ 
             strNumber[i] = ',';
+            strNumber.erase(strNumber.begin() + i + 2, strNumber.end());
+        }
         
     return strNumber;
 }
