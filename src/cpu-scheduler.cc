@@ -5,6 +5,17 @@ bool sortByArriveTime(Process& a, Process& b)
     return a.arrivalTime < b.arrivalTime;
 }
 
+string dotToComma(string number)
+{
+    for(int i=0; i< number.length(); i++)
+        if(number[i] == '.')
+        { 
+            number[i] = ',';
+            number.erase(number.begin()+i+2, number.end());
+        }
+    return number;
+}
+
 void CPUScheduler:: flush()
 {
     for (std::vector<Process>::size_type i = 0; i < process.size(); i++)
@@ -44,7 +55,7 @@ void CPUScheduler::showResults(const string algorithm, const vector<Process> pro
     averageWaitTimeProcess /= vectorSize;
     averageReturnTimeProcess /= vectorSize;
 
-    cout << fixed << setprecision(1) << algorithm << averageReturnTimeProcess << " " << averageResponseTimeProcess << " " << averageWaitTimeProcess << endl;
+    cout << fixed << setprecision(1) << algorithm << dotToComma(to_string(averageReturnTimeProcess)) << " " << dotToComma(to_string(averageResponseTimeProcess)) << " " << dotToComma(to_string(averageWaitTimeProcess)) << endl;
     flush();
 }
 
