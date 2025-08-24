@@ -102,15 +102,33 @@ void CPUScheduler::SJF()
     showResults("SJF: ", procs);
 }
 
+/*
 void CPUScheduler::RR()
 {
     int quantum = 2, count = process.size(), timePast = 0, i = 0, counter = 0;
     int timeNow =  process.at(0).arrivalTime;
     bool notComplete = true;
     vector<int> elapsed(count, 0);
+    queue<int> ready;
+    vector<bool> estaNaFila(count, false);
 
     while (notComplete)
-    {
+    {   
+        // inicilizar a fila 
+        for(int x = 0; x<count; x++)
+            if((process.at(x).arrivalTime <= timeNow) && (elapsed.at(x) < process.at(x).timeToLeave) && !(estaNaFila.at(x))){ 
+                ready.push(x);
+                estaNaFila[x] = true;
+                cout << x << " " << timeNow << endl;
+            }
+
+        if(ready.empty()){
+            timeNow++;
+            continue;
+        }
+          
+        i = ready.front();
+
         if ((timeNow >= process.at(i).arrivalTime) && (elapsed.at(i) < process.at(i).timeToLeave))
         {
             counter = 0;
@@ -137,15 +155,19 @@ void CPUScheduler::RR()
                     process.at(j).waitTime += timeNow - timePast;
             }
         }
+    
 
-        for (int j = 0; j < count; j++)
-        {
-            cout << "TIME: " << timeNow << "\n";
-            cout << "response(" << j <<"): " << process.at(j).responseTime << "\n";
+        
+        cout << "proc(" << i <<"): " << " TIME: "<< timeNow << endl;
+        cout << "Tempo de resposta p(" << i <<"):" <<  process.at(i).responseTime << endl;
+        std::queue<int> copia_fila = ready;
+        std::cout << "Elementos da fila:" << std::endl;
+        while (!copia_fila.empty()) {
+            std::cout << copia_fila.front() << " "; // Acessa e exibe o elemento da frente
+            copia_fila.pop(); // Remove o elemento da frente
         }
-        cout << "\n\n";
+        std::cout << std::endl << endl;
 
-        i = (i + 1) % count;
         notComplete = false;
 
         for (int j = 0; j < count; j++){
@@ -164,7 +186,98 @@ void CPUScheduler::RR()
                     timePast = timeNow;
                     break;
                 }
+
+        if(elapsed.at(i) < process.at(i).timeToLeave){
+            ready.pop(); // remove da cabeca da fila
+            ready.push(i); // joga para o final da fila
+        }else
+            ready.pop();
+        
     }
 
     showResults("RR: ", process);
+}*/
+
+void CPUScheduler::RR()
+{
+    const int quantum = 2;
+    vector<Process> procs = this->process;
+    int n = procs.size();
+
+    queue<int> readyQueue;
+    vector<bool> inQueue(n, false); // Renomeado para maior clareza
+
+    int currentTime = 0;
+    int completedProcesses = 0;
+    
+    // Inicia o tempo no momento de chegada do primeiro processo
+    int firstArrivalTime = INT_MAX;
+    for(int i = 0; i < n; ++i) {
+        if(procs[i].arrivalTime < firstArrivalTime) {
+            firstArrivalTime = procs[i].arrivalTime;
+        }
+    }
+    currentTime = firstArrivalTime;
+
+    // Loop principal da simulação
+    while (completedProcesses < n)
+    {
+        // ETAPA 1: Adicionar todos os processos que já chegaram e ainda não estão na fila
+        for (int i = 0; i < n; ++i) {
+            if (procs[i].remainingTime > 0 && procs[i].arrivalTime <= currentTime && !inQueue[i]) {
+                readyQueue.push(i);
+                inQueue[i] = true;
+            }
+        }
+
+        // ETAPA 2: Se a fila está vazia, a CPU está ociosa. Avance o tempo.
+        if (readyQueue.empty()) {
+            int nextArrivalTime = INT_MAX;
+            for (int i = 0; i < n; ++i) {
+                if (procs[i].remainingTime > 0) { // Procura o próximo processo AINDA NÃO CONCLUÍDO
+                    nextArrivalTime = min(nextArrivalTime, procs[i].arrivalTime);
+                }
+            }
+            // Avança o tempo para a chegada do próximo processo relevante
+            currentTime = nextArrivalTime;
+            continue; // Reinicia o loop para adicionar o novo processo à fila
+        }
+
+        // ETAPA 3: Executar o processo da frente da fila
+        int currentProcIndex = readyQueue.front();
+        readyQueue.pop();
+        inQueue[currentProcIndex] = false; // O processo já não está na fila, está a executar
+
+
+        // Calcular o tempo de resposta na primeira vez
+        if (procs[currentProcIndex].responseTime == -1) {
+            procs[currentProcIndex].responseTime = currentTime - procs[currentProcIndex].arrivalTime;
+        }
+
+        int timeSlice = min(quantum, procs[currentProcIndex].remainingTime);
+        
+        currentTime += timeSlice;
+        procs[currentProcIndex].remainingTime -= timeSlice;
+
+        // ETAPA 4: Verificar se o processo terminou ou volta para a fila
+        if (procs[currentProcIndex].remainingTime > 0) {
+            // Antes de o devolver à fila, adicionamos primeiro os que chegaram durante a sua execução
+            for (int i = 0; i < n; ++i) {
+                if (procs[i].remainingTime > 0 && procs[i].arrivalTime <= currentTime && !inQueue[i]) {
+                    readyQueue.push(i);
+                    inQueue[i] = true;
+                }
+            }
+            // Agora sim, o processo atual volta para o fim da fila
+            readyQueue.push(currentProcIndex);
+            inQueue[currentProcIndex] = true;
+        } else {
+            // O processo terminou
+            procs[currentProcIndex].returnTime = currentTime - procs[currentProcIndex].arrivalTime;
+            procs[currentProcIndex].waitTime = procs[currentProcIndex].returnTime - procs[currentProcIndex].timeToLeave;
+            completedProcesses++;
+        }
+    }
+
+    showResults("RR", procs);
 }

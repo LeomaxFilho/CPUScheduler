@@ -5,6 +5,7 @@
 #include <iostream>
 #include <iomanip>
 #include <climits>
+#include <queue>
 
 using namespace std;
 
@@ -15,7 +16,8 @@ struct Process
     int timeToLeave;
     int waitTime = 0;
     int returnTime;
-    int responseTime;
+    int responseTime = -1;
+    int remainingTime;
 
     Process(int Id, int ArrivalTime, int TimeToLeave);
 };
