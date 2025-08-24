@@ -7,7 +7,7 @@ bool sortByArriveTime(Process& a, Process& b)
 
 void CPUScheduler:: flush()
 {
-    for (int i = 0; i < process.size(); i++)
+    for (std::vector<Process>::size_type i = 0; i < process.size(); i++)
     {
         process.at(i).responseTime =0;
         process.at(i).waitTime = 0;
@@ -17,8 +17,12 @@ void CPUScheduler:: flush()
 
 void CPUScheduler::addProcess(int arrive, int burst)
 {
-    process.push_back(Process(process.size(), arrive, burst));
+    process.push_back(Process(arrive, burst));
     std::sort(process.begin(), process.end(), sortByArriveTime);
+
+    for (std::vector<Process>::size_type i = 0; i < process.size(); i++){
+        process.at(i).id = i;
+    }
 }
 
 void CPUScheduler::showResults(const string algorithm, const vector<Process> procs)
@@ -102,182 +106,77 @@ void CPUScheduler::SJF()
     showResults("SJF: ", procs);
 }
 
-/*
 void CPUScheduler::RR()
 {
-    int quantum = 2, count = process.size(), timePast = 0, i = 0, counter = 0;
-    int timeNow =  process.at(0).arrivalTime;
-    bool notComplete = true;
-    vector<int> elapsed(count, 0);
-    queue<int> ready;
-    vector<bool> estaNaFila(count, false);
+    queue<Process*> processQueue;
+    int quantum = 2, count = process.size(), timePast = 0;
+    int i = 0;
+    vector<int> remainingTime(count, 0);
+    int queueJoined = 1;
 
-    while (notComplete)
-    {   
-        // inicilizar a fila 
-        for(int x = 0; x<count; x++)
-            if((process.at(x).arrivalTime <= timeNow) && (elapsed.at(x) < process.at(x).timeToLeave) && !(estaNaFila.at(x))){ 
-                ready.push(x);
-                estaNaFila[x] = true;
-                cout << x << " " << timeNow << endl;
-            }
+    processQueue.push(&process.at(0));
 
-        if(ready.empty()){
-            timeNow++;
-            continue;
-        }
-          
-        i = ready.front();
+    int timeNow =  processQueue.front()->arrivalTime;
 
-        if ((timeNow >= process.at(i).arrivalTime) && (elapsed.at(i) < process.at(i).timeToLeave))
+    while (!processQueue.empty() || queueJoined < count)
+    {
+        i = processQueue.front()->id;
+
+        if (remainingTime.at(i) == 0)
+            processQueue.front()->responseTime = timeNow - processQueue.front()->arrivalTime;
+
+        if(quantum >= (processQueue.front()->timeToLeave - remainingTime.at(i)) && ((processQueue.front()->timeToLeave - remainingTime.at(i)) != 0))
         {
-            counter = 0;
-            if (elapsed.at(i) == 0)
-                process.at(i).responseTime = timeNow - process.at(i).arrivalTime;
-
-            if(quantum >= (process.at(i).timeToLeave - elapsed.at(i)) && ((process.at(i).timeToLeave - elapsed.at(i)) != 0))
-            {
-                timePast = timeNow;
-                timeNow += process.at(i).timeToLeave - elapsed.at(i);
-                elapsed.at(i) += timeNow - timePast;
-                process.at(i).returnTime = timeNow - process.at(i).arrivalTime;
-            }
-            else
-            {
-                timePast = timeNow;
-                timeNow += quantum;
-                elapsed.at(i) += quantum;
-            }
-
-            for (int j = 0; j < count; j++)
-            {
-                if ((j != i) && (timeNow > process.at(j).arrivalTime) && (elapsed.at(j) < process.at(j).timeToLeave))
-                    process.at(j).waitTime += timeNow - timePast;
-            }
+            timePast = timeNow;
+            timeNow += processQueue.front()->timeToLeave - remainingTime.at(i);
+            remainingTime.at(i) += timeNow - timePast;
+            processQueue.front()->returnTime = timeNow - processQueue.front()->arrivalTime;
         }
-    
-
-        
-        cout << "proc(" << i <<"): " << " TIME: "<< timeNow << endl;
-        cout << "Tempo de resposta p(" << i <<"):" <<  process.at(i).responseTime << endl;
-        std::queue<int> copia_fila = ready;
-        std::cout << "Elementos da fila:" << std::endl;
-        while (!copia_fila.empty()) {
-            std::cout << copia_fila.front() << " "; // Acessa e exibe o elemento da frente
-            copia_fila.pop(); // Remove o elemento da frente
+        else
+        {
+            timePast = timeNow;
+            timeNow += quantum;
+            remainingTime.at(i) += quantum;
         }
-        std::cout << std::endl << endl;
 
-        notComplete = false;
+        processQueue.pop();
 
-        for (int j = 0; j < count; j++){
-            if(elapsed.at(j) < process.at(j).timeToLeave){
-                notComplete = true;
-                break;
+        if(queueJoined <= count)
+        {
+            for (int j = queueJoined; j < count; j++)
+            {
+                if (timeNow >= process.at(j).arrivalTime)
+                {
+                    processQueue.push(&process.at(j));
+                    queueJoined++;
+                }
             }
         }
 
-        counter++;
+        if (process.at(i).timeToLeave > remainingTime.at(i))
+            processQueue.push(&process.at(i));
 
-        if (counter - 1 > count)
-            for (int j = 0; j < count; j++)
-                if(elapsed.at(j) < process.at(j).timeToLeave){
+        if (processQueue.empty())
+            for (int j = queueJoined; j < count; j++)
+            {
+                if (timeNow < process.at(j).arrivalTime)
+                {
                     timeNow = process.at(j).arrivalTime;
-                    timePast = timeNow;
-                    break;
+                    j--;
                 }
 
-        if(elapsed.at(i) < process.at(i).timeToLeave){
-            ready.pop(); // remove da cabeca da fila
-            ready.push(i); // joga para o final da fila
-        }else
-            ready.pop();
-        
+                if (timeNow >= process.at(j).arrivalTime && remainingTime.at(j) == 0)
+                {
+                    processQueue.push(&process.at(j));
+                    queueJoined++;
+                }
+            }
+
+        i = ++i % queueJoined;
     }
+
+    for(auto& var : process)
+        var.waitTime = var.returnTime - var.timeToLeave;
 
     showResults("RR: ", process);
-}*/
-
-void CPUScheduler::RR()
-{
-    const int quantum = 2;
-    vector<Process> procs = this->process;
-    int n = procs.size();
-
-    queue<int> readyQueue;
-    vector<bool> inQueue(n, false); // Renomeado para maior clareza
-
-    int currentTime = 0;
-    int completedProcesses = 0;
-    
-    // Inicia o tempo no momento de chegada do primeiro processo
-    int firstArrivalTime = INT_MAX;
-    for(int i = 0; i < n; ++i) {
-        if(procs[i].arrivalTime < firstArrivalTime) {
-            firstArrivalTime = procs[i].arrivalTime;
-        }
-    }
-    currentTime = firstArrivalTime;
-
-    // Loop principal da simulação
-    while (completedProcesses < n)
-    {
-        // ETAPA 1: Adicionar todos os processos que já chegaram e ainda não estão na fila
-        for (int i = 0; i < n; ++i) {
-            if (procs[i].remainingTime > 0 && procs[i].arrivalTime <= currentTime && !inQueue[i]) {
-                readyQueue.push(i);
-                inQueue[i] = true;
-            }
-        }
-
-        // ETAPA 2: Se a fila está vazia, a CPU está ociosa. Avance o tempo.
-        if (readyQueue.empty()) {
-            int nextArrivalTime = INT_MAX;
-            for (int i = 0; i < n; ++i) {
-                if (procs[i].remainingTime > 0) { // Procura o próximo processo AINDA NÃO CONCLUÍDO
-                    nextArrivalTime = min(nextArrivalTime, procs[i].arrivalTime);
-                }
-            }
-            // Avança o tempo para a chegada do próximo processo relevante
-            currentTime = nextArrivalTime;
-            continue; // Reinicia o loop para adicionar o novo processo à fila
-        }
-
-        // ETAPA 3: Executar o processo da frente da fila
-        int currentProcIndex = readyQueue.front();
-        readyQueue.pop();
-        inQueue[currentProcIndex] = false; // O processo já não está na fila, está a executar
-
-
-        // Calcular o tempo de resposta na primeira vez
-        if (procs[currentProcIndex].responseTime == -1) {
-            procs[currentProcIndex].responseTime = currentTime - procs[currentProcIndex].arrivalTime;
-        }
-
-        int timeSlice = min(quantum, procs[currentProcIndex].remainingTime);
-        
-        currentTime += timeSlice;
-        procs[currentProcIndex].remainingTime -= timeSlice;
-
-        // ETAPA 4: Verificar se o processo terminou ou volta para a fila
-        if (procs[currentProcIndex].remainingTime > 0) {
-            // Antes de o devolver à fila, adicionamos primeiro os que chegaram durante a sua execução
-            for (int i = 0; i < n; ++i) {
-                if (procs[i].remainingTime > 0 && procs[i].arrivalTime <= currentTime && !inQueue[i]) {
-                    readyQueue.push(i);
-                    inQueue[i] = true;
-                }
-            }
-            // Agora sim, o processo atual volta para o fim da fila
-            readyQueue.push(currentProcIndex);
-            inQueue[currentProcIndex] = true;
-        } else {
-            // O processo terminou
-            procs[currentProcIndex].returnTime = currentTime - procs[currentProcIndex].arrivalTime;
-            procs[currentProcIndex].waitTime = procs[currentProcIndex].returnTime - procs[currentProcIndex].timeToLeave;
-            completedProcesses++;
-        }
-    }
-
-    showResults("RR", procs);
 }

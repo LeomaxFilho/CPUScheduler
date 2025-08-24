@@ -1,4 +1,4 @@
 #include "process.hh"
 
-Process::Process(int Id, int ArrivalTime, int TimeToLeave)  :
-        id(Id), arrivalTime(ArrivalTime), timeToLeave(TimeToLeave) {};
+Process::Process(int ArrivalTime, int TimeToLeave)  :
+        arrivalTime(ArrivalTime), timeToLeave(TimeToLeave) {};

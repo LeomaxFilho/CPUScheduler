@@ -16,8 +16,7 @@ struct Process
     int timeToLeave;
     int waitTime = 0;
     int returnTime;
-    int responseTime = -1;
-    int remainingTime;
+    int responseTime;
 
-    Process(int Id, int ArrivalTime, int TimeToLeave);
+    Process(int ArrivalTime, int TimeToLeave);
 };
